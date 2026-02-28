@@ -1,4 +1,5 @@
 import { supabase } from "./subabase.js";
+import { initAuthUI } from "./auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -195,91 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Authentication & Navbar Logic ---
-    function updateNavbar(user) {
-        const login = document.getElementById('login');
-        const signup = document.getElementById('signup');
-        const profile = document.getElementById('profile');
-        const profileContent = document.getElementById('profile-content');
-
-        if (user) {
-            if (login) login.classList.add('hidden');
-            if (signup) signup.classList.add('hidden');
-            if (profile) profile.classList.remove('hidden');
-
-            const firstName = user.user_metadata?.first_name || 'U';
-            const lastName = user.user_metadata?.last_name || '';
-
-            if (profileContent) {
-                profileContent.innerHTML = `<span class="text-sm font-bold uppercase">${firstName[0]}${lastName[0] || ''}</span>`;
-                if (user.user_metadata?.avatar_url) {
-                    profileContent.innerHTML = `<img src="${user.user_metadata.avatar_url}" class="w-full h-full object-cover">`;
-                }
-            }
-        } else {
-            if (login) login.classList.remove('hidden');
-            if (signup) signup.classList.remove('hidden');
-            if (profile) profile.classList.add('hidden');
-        }
-    }
-
-    async function getUser() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) updateNavbar(user);
-    }
-
-    const profileContent = document.getElementById('profile-content');
-    const profileInfo = document.getElementById('profile-info');
-
-    if (profileContent && profileInfo) {
-        profileContent.addEventListener('click', () => {
-            profileInfo.classList.toggle('hidden');
-        });
-    }
-
-    async function getUserData() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error: userError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-        if (!userError && data && profileInfo) {
-            profileInfo.innerHTML = `
-                <div class="space-y-4">
-                    <div class="border-b pb-3">
-                        <p class="font-bold text-gray-900">${data.first_name} ${data.last_name}</p>
-                        <p class="text-xs text-gray-500">${data.email}</p>
-                        <p class="inline-block px-2 py-0.5 bg-brand-50 text-brand-600 text-[10px] font-bold rounded-md uppercase tracking-wider mt-1">${data.role}</p>
-                    </div>
-                    <div class="space-y-2">
-                        <a href="agent.html" class="flex items-center gap-2 text-sm text-gray-700 hover:text-brand-600 transition-colors">
-                            <i data-lucide="user" class="w-4 h-4"></i> Profile Settings
-                        </a>
-                        <button id="logout-btn" class="w-full text-left flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors">
-                            <i data-lucide="log-out" class="w-4 h-4"></i> Logout
-                        </button>
-                    </div>
-                </div>
-            `;
-            if (window.lucide) window.lucide.createIcons();
-
-            const btn = document.getElementById('logout-btn');
-            if (btn) btn.onclick = async () => {
-                await supabase.auth.signOut();
-                window.location.reload();
-            };
-        }
-    }
-
     fetchPropertyDetails();
-    getUser();
-    getUserData();
-
-    supabase.auth.onAuthStateChange((event, session) => {
-        updateNavbar(session?.user);
-        getUserData();
-    });
+    initAuthUI();
 });

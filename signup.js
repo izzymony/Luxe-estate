@@ -36,16 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error("User creation failed.")
                 }
 
-                if (roleValue === 'agent') {
-                    window.location.href = 'agent.html'
-
-                } else {
-                    window.location.href = 'index.html'
-
-                }
-
-                // After successful auth signup, we create the database record
-                // We use the same 'id' as the auth user
+                // AFTER successful auth signup, we create the database record
+                // We must do this BEFORE redirecting
                 const { error: dbError } = await supabase
                     .from('profiles')
                     .upsert([{
@@ -61,8 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error("Could not save profile information.")
                 }
 
-                alert("Signup successful! Please check your email for verification.")
-                window.location.href = 'login.html'
+                // Now safe to redirect
+                if (roleValue === 'agent') {
+                    window.location.href = 'agent.html'
+                } else {
+                    window.location.href = 'index.html'
+                }
 
             } catch (error) {
                 console.error('Error during signup:', error.message)
