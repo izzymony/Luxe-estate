@@ -26,6 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('opacity-0');
+            mobileMenu.classList.toggle('translate-y-[-10px]');
+            mobileMenu.classList.toggle('pointer-events-none');
+            mobileMenu.classList.toggle('opacity-100');
+            mobileMenu.classList.toggle('translate-y-0');
+            mobileMenu.classList.toggle('pointer-events-auto');
+        });
+    }
+
     async function getUser() {
         const { data: { user } } = await supabase.auth.getUser()
         updateNavbar(user)
@@ -51,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (sbError) console.error('Supabase fetch error:', sbError);
 
-           
+
             const normalizedSb = (supabaseData || []).map(prop => ({
                 id: prop.id,
                 price: prop.price,
@@ -69,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSupabase: true
             }));
 
-       
+
             const allListings = [...normalizedSb, ...apiData];
 
             if (allListings && allListings.length > 0) {
