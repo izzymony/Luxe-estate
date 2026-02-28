@@ -33,10 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuthUI();
 
 
+
     async function getListings() {
         try {
             // Fetch from API and Supabase in parallel
-            const apiPromise = fetch('/api/listings').then(res => res.ok ? res.json() : []);
+            const apiPromise = fetch('/api/listings').then(res => (res.ok || res.status === 304) ? res.json() : []);
             const supabasePromise = supabase
                 .from('properties')
                 .select('*')
@@ -50,13 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (sbError) console.error('Supabase fetch error:', sbError);
 
-            // Normalize Supabase data to match the card display expectations
+           
             const normalizedSb = (supabaseData || []).map(prop => ({
                 id: prop.id,
                 price: prop.price,
                 offerType: prop.offer_type,
                 realEstateType: prop.type || 'LUXURY_ESTATE',
                 street: prop.street,
+                description: prop.description,
                 city: prop.city,
                 state: prop.state,
                 bedrooms: prop.bedrooms,
@@ -67,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSupabase: true
             }));
 
-            // Combine data: new Supabase listings first, then default API listings
+       
             const allListings = [...normalizedSb, ...apiData];
 
             if (allListings && allListings.length > 0) {
@@ -151,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-sm text-gray-500">${address}</span>
                     </div>
                     <h4 class="text-xl font-bold text-gray-900 mb-4 group-hover:text-brand-600 transition-colors italic">${city}, ${state}</h4>
-                    <p class="text-sm text-gray-400 mb-4 line-clamp-2">${description}</p>
+                    <p class="text-sm text-gray-400 mb-4 line-clamp-2">${property.description || ''}</p>
                     <div class="flex items-center justify-between py-4 border-t border-gray-50 flex-wrap gap-4">
                         <div class="flex items-center gap-4 text-gray-500 text-sm">
                             <span class="flex items-center gap-1.5 font-medium"><span class="text-gray-900">${beds}</span> Beds</span>
@@ -173,9 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    getListings();
-
-
+    getUser();
     initAuthUI();
     getListings();
 });
