@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Details | LUXE Estate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .gallery-image {
+            transition: all 0.3s ease;
+        }
+
+        .gallery-image:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-gray-100"
+        id="navbar">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="flex items-center gap-2">
+                    <div
+                        class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-200">
+                        L</div>
+                    <span class="text-2xl font-bold tracking-tight text-gray-900">LUXE<span
+                            class="text-brand-600">Estate</span></span>
+                </a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 font-medium text-gray-600">
+                <a href="index.html" class="hover:text-brand-600 transition-colors">Home</a>
+                <a href="properties.html" class="text-brand-600 font-bold">Properties</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">Agents</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">About</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div id="auth-buttons" class="flex items-center gap-4">
+                    <a href="login.html" id="login"
+                        class="text-gray-900 font-medium hidden sm:block hover:text-brand-600 transition-colors">Sign
+                        In</a>
+                    <a href="signup.html" id="signup"
+                        class="bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-brand-600 transition-all shadow-md active:scale-95">Get
+                        Started</a>
+
+                    <div id="profile" class="hidden cursor-pointer group relative">
+                        <div class="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden shadow-md"
+                            id="profile-content">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="profile-info"
+        class="bg-white hidden p-3 rounded-2xl fixed top-20  z-50 mt-3 w-[300px] right-10 shadow-xl border border-gray-100">
+    </div>
+
+    <!-- Main Content (Dynamically Populated) -->
+    <main id="dynamic-content" class="pt-28 pb-16 min-h-[60vh]">
+        <div class="max-w-7xl mx-auto px-6 text-center py-20">
+            <div class="animate-pulse flex flex-col items-center">
+                <div class="h-10 w-64 bg-gray-200 rounded-full mb-4"></div>
+                <div class="h-4 w-48 bg-gray-100 rounded-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-24 pb-12 mt-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+                <div>
+                    <div class="flex items-center gap-2 mb-8">
+                        <div
+                            class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                            L</div>
+                        <span class="text-2xl font-bold tracking-tight">LUXE<span
+                                class="text-brand-600">Estate</span></span>
+                    </div>
+                    <p class="text-gray-400 leading-relaxed mb-8">Redefining modern living with a global portfolio of
+                        premium architectural masterpieces.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8 text-white">Quick Links</h4>
+                    <ul class="space-y-4 text-gray-400 font-medium">
+                        <li><a href="index.html" class="hover:text-brand-400 transition-colors">Home</a></li>
+                        <li><a href="properties.html" class="hover:text-brand-400 transition-colors">Properties</a></li>
+                        <li><a href="#" class="hover:text-brand-400 transition-colors">Agents</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8 text-white">Support</h4>
+                    <ul class="space-y-4 text-gray-400 font-medium">
+                        <li><a href="#" class="hover:text-brand-400 transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-brand-400 transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-brand-400 transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8 text-white">Newsletter</h4>
+                    <div class="flex gap-2">
+                        <input type="email" placeholder="Email Address"
+                            class="bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 w-full focus:outline-none focus:border-brand-500 transition-colors text-sm font-medium">
+                        <button
+                            class="bg-brand-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-brand-700 transition-colors shadow-lg">Join</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-gray-500 text-sm font-medium">© 2026 LUXE Estate. All rights reserved.</p>
+                <div class="flex gap-6 text-gray-400">
+                    <a href="#" class="hover:text-brand-400 transition-colors"><i data-lucide="facebook"
+                            class="w-5 h-5"></i></a>
+                    <a href="#" class="hover:text-brand-400 transition-colors"><i data-lucide="twitter"
+                            class="w-5 h-5"></i></a>
+                    <a href="#" class="hover:text-brand-400 transition-colors"><i data-lucide="instagram"
+                            class="w-5 h-5"></i></a>
+                    <a href="#" class="hover:text-brand-400 transition-colors"><i data-lucide="linkedin"
+                            class="w-5 h-5"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+    <!-- Injection of Details Logic -->
+    <script src="details.js" type="module"></script>
+</body>
+
+</html>

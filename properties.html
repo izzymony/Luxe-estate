@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties | LUXE Estate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .property-card:hover .property-image {
+            transform: scale(1.1);
+        }
+
+        .filter-chip.active {
+            background-color: #0284c7;
+            color: white;
+            border-color: #0284c7;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300" id="navbar">
+        <div
+            class="max-w-7xl mx-auto flex items-center justify-between glass rounded-2xl px-6 py-3 shadow-sm border border-white/40">
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="flex items-center gap-2">
+                    <div
+                        class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-200">
+                        L</div>
+                    <span class="text-2xl font-bold tracking-tight text-gray-900">LUXE<span
+                            class="text-brand-600">Estate</span></span>
+                </a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 font-medium text-gray-600">
+                <a href="index.html" class="hover:text-brand-600 transition-colors">Home</a>
+                <a href="index.html#featured" class="hover:text-brand-600 transition-colors">Properties</a>
+                <a href="#" class="text-brand-600 font-bold">Agents</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">About</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div id="auth-buttons" class="flex items-center gap-4">
+                    <a href="login.html" id="login"
+                        class="text-gray-900 font-medium hidden sm:block hover:text-brand-600 transition-colors">Sign
+                        In</a>
+                    <a href="signup.html" id="signup"
+                        class="bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-brand-600 transition-all shadow-md active:scale-95">Get
+                        Started</a>
+
+                    <div id="profile" class="hidden cursor-pointer group relative">
+                        <div class="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden shadow-md"
+                            id="profile-content">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+
+    <!-- Header Section -->
+    <header class="pt-32 pb-12 bg-white border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <nav class="flex text-sm text-gray-500 mb-2 gap-2">
+                        <a href="index.html" class="hover:text-brand-600">Home</a>
+                        <span>/</span>
+                        <span class="text-gray-900 font-medium">Properties</span>
+                    </nav>
+                    <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Available <span
+                            class="text-brand-600 font-extrabold italic">Collections</span></h1>
+                    <p class="text-gray-500 mt-2">Discover our curated selection of 1,200+ premium properties worldwide.
+                    </p>
+                </div>
+                <div class="w-full md:w-auto">
+                    <div class="relative">
+                        <input type="text" id="search" placeholder="Search by location, title..."
+                            class="w-full md:w-80 pl-12 pr-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="flex flex-col lg:flex-row gap-12">
+
+            <!-- Sidebar Filters (Desktop) -->
+            <aside class="w-full lg:w-72 space-y-8 shrink-0">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Property Type</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:border-brand-600 hover:text-brand-600 transition-all filter-chip active">All</button>
+                        <button
+                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:border-brand-600 hover:text-brand-600 transition-all filter-chip">Villa</button>
+                        <button
+                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:border-brand-600 hover:text-brand-600 transition-all filter-chip">Apartment</button>
+                        <button
+                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium hover:border-brand-600 hover:text-brand-600 transition-all filter-chip">Penthhouse</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Price Range</h3>
+                    <div class="space-y-4">
+                        <input type="range" min="500000" max="10000000" step="50000"
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                        <div class="flex justify-between items-center text-sm font-semibold text-gray-600">
+                            <span>$500k</span>
+                            <span>$10M+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Bedrooms</h3>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button
+                            class="py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-brand-50 transition-all">1+</button>
+                        <button
+                            class="py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-brand-50 transition-all">2+</button>
+                        <button
+                            class="py-2 rounded-xl border border-gray-200 text-sm font-medium bg-brand-600 text-white shadow-lg shadow-brand-200 transition-all">3+</button>
+                        <button
+                            class="py-2 rounded-xl border border-gray-200 text-sm font-medium hover:bg-brand-50 transition-all">4+</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Amenities</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox"
+                                class="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span class="text-gray-600 group-hover:text-brand-600 transition-colors">Swimming
+                                Pool</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" checked
+                                class="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span class="text-gray-600 group-hover:text-brand-600 transition-colors">Smart Home</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox"
+                                class="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span class="text-gray-600 group-hover:text-brand-600 transition-colors">Garden</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox"
+                                class="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span class="text-gray-600 group-hover:text-brand-600 transition-colors">Beach View</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button
+                    class="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-brand-600 transition-all shadow-xl shadow-gray-200">
+                    Apply Filters
+                </button>
+            </aside>
+
+            <!-- Results Grid -->
+            <div class="flex-1">
+                <!-- Sorting & View Options -->
+                <div class="flex justify-between items-center mb-8">
+                    <p class="text-gray-500 font-medium">Showing <span class="text-gray-900">1-9</span> of <span
+                            class="text-gray-900">1200+</span> properties</p>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-wider">Sort By:</span>
+                        <select class="bg-transparent font-bold text-gray-900 focus:outline-none cursor-pointer">
+                            <option>Latest Listings</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Most Popular</option>
+                        </select>
+                    </div>
+                </div>
+
+             
+                <!-- Cards Grid -->
+                <div>
+                    <div id="property-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+                </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+                <div>
+                    <div class="flex items-center gap-2 mb-8">
+                        <div
+                            class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                            L</div>
+                        <span class="text-2xl font-bold tracking-tight">LUXE<span
+                                class="text-brand-600">Estate</span></span>
+                    </div>
+                    <p class="text-gray-400 leading-relaxed mb-8">Redefining modern living with a global portfolio of
+                        premium architectural masterpieces.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Quick Links</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="index.html" class="hover:text-white">Home</a></li>
+                        <li><a href="properties.html" class="hover:text-white">Properties</a></li>
+                        <li><a href="#" class="hover:text-white">Agents</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Support</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Newsletter</h4>
+                    <div class="flex gap-2">
+                        <input type="email" placeholder="Email"
+                            class="bg-white/5 border border-white/10 rounded-xl px-4 py-2 w-full focus:outline-none focus:border-brand-600 transition-colors">
+                        <button class="bg-brand-600 text-white px-4 py-2 rounded-xl font-bold">Join</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-gray-500 text-sm">© 2026 LUXE Estate. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+<script src="properties.js" type="module" ></script>
+</body>
+
+</html>

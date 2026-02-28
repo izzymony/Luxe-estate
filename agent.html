@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Profile | LUXE Estate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.8));
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .agent-card-glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300" id="navbar">
+        <div
+            class="max-w-7xl mx-auto flex items-center justify-between glass rounded-2xl px-6 py-3 shadow-sm border border-white/40">
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="flex items-center gap-2">
+                    <div
+                        class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-200">
+                        L</div>
+                    <span class="text-2xl font-bold tracking-tight text-gray-900">LUXE<span
+                            class="text-brand-600">Estate</span></span>
+                </a>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8 font-medium text-gray-600">
+                <a href="index.html" class="hover:text-brand-600 transition-colors">Home</a>
+                <a href="index.html#featured" class="hover:text-brand-600 transition-colors">Properties</a>
+                <a href="#" class="text-brand-600 font-bold">Agents</a>
+                <a href="#" class="hover:text-brand-600 transition-colors">About</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div id="auth-buttons" class="flex items-center gap-4">
+                    <a href="login.html" id="login"
+                        class="text-gray-900 font-medium hidden sm:block hover:text-brand-600 transition-colors">Sign
+                        In</a>
+                    <a href="signup.html" id="signup"
+                        class="bg-gray-900 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-brand-600 transition-all shadow-md active:scale-95">Get
+                        Started</a>
+
+                    <div id="profile" class="hidden cursor-pointer group relative">
+                        <div class="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden shadow-md"
+                            id="profile-content">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="profile-info"
+        class="bg-white hidden p-4 rounded-2xl fixed top-20 z-50 mt-3 w-[300px] right-10 shadow-2xl border border-gray-100">
+        <!-- Profile info content -->
+    </div>
+
+    <!-- Agent Hero Section -->
+    <section class="relative pt-32 pb-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+                <!-- Agent Portrait -->
+                <div class="lg:col-span-5 relative fade-in">
+                    <div class="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl aspect-[4/5] bg-gray-200">
+                        <img id="agent-portrait"
+                            src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2000&auto=format&fit=crop"
+                            alt="Agent Portrait" class="w-full h-full object-cover">
+                        <div class="absolute inset-x-0 bottom-0 h-1/2 hero-gradient"></div>
+                        <div class="absolute bottom-10 left-10 text-white">
+                            <span
+                                class="px-4 py-1.5 bg-brand-600 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">Top
+                                Producer 2025</span>
+                            <h1 id="agent-name-hero" class="text-4xl font-bold">Alexander Vance</h1>
+                            <p id="agent-title" class="text-brand-400 font-medium">Senior Luxury Consultant</p>
+                        </div>
+                    </div>
+                    <!-- Decorative Elements -->
+                    <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-600/10 rounded-full blur-3xl"></div>
+                    <div class="absolute -bottom-10 -right-10 w-60 h-60 bg-brand-600/5 rounded-full blur-3xl"></div>
+                </div>
+
+                <!-- Agent Details -->
+                <div class="lg:col-span-7 space-y-8 fade-in" style="animation-delay: 0.2s">
+                    <div>
+                        <span class="text-brand-600 font-bold uppercase tracking-widest text-sm mb-4 block">Professional
+                            Profile</span>
+                        <h2 class="text-4xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                            Tailoring Your <br> <span class="text-gray-400">Exclusive Luxury Journey</span>
+                        </h2>
+                        <p id="agent-bio" class="text-xl text-gray-500 leading-relaxed max-w-2xl">
+                            With over 12 years of experience in the luxury real estate market, Alexander Vance
+                            specializes in high-end coastal estates and minimalist urban penthouses. His client-first
+                            approach ensures a seamless acquisition process for the most discerning buyers.
+                        </p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="agent-card-glass p-6 rounded-3xl shadow-sm border-gray-100">
+                            <h3 class="text-3xl font-bold text-gray-900 mb-1">12+</h3>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Years Exp.</p>
+                        </div>
+                        <div class="agent-card-glass p-6 rounded-3xl shadow-sm border-gray-100">
+                            <h3 class="text-3xl font-bold text-gray-900 mb-1">158</h3>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Properties Sold</p>
+                        </div>
+                        <div class="agent-card-glass p-6 rounded-3xl shadow-sm border-gray-100">
+                            <h3 class="text-3xl font-bold text-gray-900 mb-1">$450M</h3>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Sales Volume</p>
+                        </div>
+                        <div class="agent-card-glass p-6 rounded-3xl shadow-sm border-gray-100">
+                            <h3 class="text-3xl font-bold text-gray-900 mb-1">4.9</h3>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Client Rating</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <button id="open-upload-modal"
+                            class="bg-brand-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-brand-700 transition-all shadow-xl shadow-brand-200 active:scale-95 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Upload New Listing
+                        </button>
+                        <button id="edit-profile-btn"
+                            class="glass px-8 py-4 rounded-2xl font-bold border border-gray-200 hover:border-brand-600 hover:text-brand-600 transition-all active:scale-95 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Listings Section -->
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div>
+                    <span class="text-brand-600 font-bold uppercase tracking-widest text-sm mb-4 block">Exclusive
+                        Selection</span>
+                    <h2 class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">Featured <br> <span
+                            class="text-gray-400">Listings by Alexander</span></h2>
+                </div>
+                <div class="flex gap-4">
+                    <button
+                        class="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <button
+                        class="w-14 h-14 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-brand-600 transition-all shadow-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="agent-listings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Property cards will be injected here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+                <div class="col-span-1 lg:col-span-1">
+                    <div class="flex items-center gap-2 mb-8">
+                        <div
+                            class="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                            L</div>
+                        <span class="text-2xl font-bold tracking-tight">LUXE<span
+                                class="text-brand-600">Estate</span></span>
+                    </div>
+                    <p class="text-gray-400 leading-relaxed mb-8">Redefining modern living with a global portfolio of
+                        premium architectural masterpieces.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Quick Links</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Find a Home</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">List Your Property</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Luxury Portfolio</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Our Trusted Agents</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Support</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-8">Connect</h4>
+                    <div class="flex gap-4">
+                        <!-- Social Icons would go here as in index.html -->
+                    </div>
+                </div>
+            </div>
+            <div class="pt-12 border-t border-white/5 text-center">
+                <p class="text-gray-500 text-sm">© 2026 LUXE Estate. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Upload Property Modal -->
+    <div id="upload-modal" class="fixed inset-0 z-[100] hidden items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" id="upload-modal-backdrop"></div>
+
+        <!-- Modal Content -->
+        <div
+            class="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4 fade-in">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 id="modal-title" class="text-3xl font-bold text-gray-900">Upload New Listing</h2>
+                    <button id="close-upload-modal"
+                        class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-900 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="upload-form" class="space-y-6">
+                    <!-- Image File Upload -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Property Image</label>
+                        <input type="file" id="property-image" accept="image/*"
+                            class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Street -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Street Address</label>
+                            <input type="text" id="property-street" required placeholder="123 Luxury Ave"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- City -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">City</label>
+                            <input type="text" id="property-city" required placeholder="Beverly Hills"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- State -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">State</label>
+                            <input type="text" id="property-state" required placeholder="CA"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                            <textarea id="property-description" required placeholder="Description"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"></textarea>
+                        </div>
+
+                        <!-- Price -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Price ($)</label>
+                            <input type="number" id="property-price" required placeholder="5000000"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Beds -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Bedrooms</label>
+                            <input type="number" id="property-beds" required placeholder="5"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Baths -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Bathrooms</label>
+                            <input type="number" id="property-baths" required placeholder="4.5" step="0.5"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Sqft -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Living Area (sqft)</label>
+                            <input type="number" id="property-sqft" required placeholder="6500"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Property Type -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Property Type</label>
+                            <select id="property-type" required
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                                <option value="" disabled selected>Select Type</option>
+                                <option value="Apartment">Apartment</option>
+                                <option value="Condo">Condo</option>
+                                <option value="House">House</option>
+                                <option value="Villa">Villa</option>
+                                <option value="Penthouse">Penthouse</option>
+                                <option value="Townhouse">Townhouse</option>
+                            </select>
+                        </div>
+
+                        <!-- Status/Type -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Offer Type</label>
+                            <select id="property-offer-type"
+                                class="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                                <option value="sale">For Sale</option>
+                                <option value="rent">For Rent</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Submit -->
+                    <div class="pt-6 border-t border-gray-100">
+                        <button type="submit" id="submit-listing-btn"
+                            class="w-full bg-brand-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-200 hover:bg-brand-700 hover:shadow-brand-300 transition-all active:scale-[0.98]">
+                            Publish Listing
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="agent.js"></script>
+</body>
+
+</html>
