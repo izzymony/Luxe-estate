@@ -10,10 +10,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     const headerEmail = document.getElementById('header-email');
     const headerAvatar = document.getElementById('header-avatar');
     const logoutBtnSidebar = document.getElementById('logout-btn-sidebar');
-    const avatar = document.getElementById('avatar-input')
+    const avatar = document.getElementById('avatar-input');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
 
+    // Mobile Menu Toggle
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('opacity-0');
+            mobileMenu.classList.toggle('translate-y-[-10px]');
+            mobileMenu.classList.toggle('pointer-events-none');
+        });
 
-
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                mobileMenu.classList.add('opacity-0');
+                mobileMenu.classList.add('translate-y-[-10px]');
+                mobileMenu.classList.add('pointer-events-none');
+            }
+        });
+    }
     async function loadProfileData(user) {
         if (!user) {
             // Reset UI if no user
