@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const headerAvatar = document.getElementById('header-avatar');
     const logoutBtnSidebar = document.getElementById('logout-btn-sidebar');
     const avatar = document.getElementById('avatar-input')
-   
 
-   
+
+
     async function loadProfileData(user) {
         if (!user) {
             // Reset UI if no user
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
                 if (headerName) headerName.textContent = fullName || user.email.split('@')[0];
                 if (headerEmail) headerEmail.textContent = profile.email || user.email;
-                if (profile.avatar_url && headerAvatar) headerAvatar.src = profile.avatar_url;
+                if (profile.profile_url && headerAvatar) headerAvatar.src = profile.profile_url;
 
                 // Fill form fields
                 if (profileForm) {
@@ -73,78 +73,83 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     //Update profile
-     profileForm.addEventListener('submit', async (e)=>{
+    profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        
+
+
         const form = e.target;
         const formData = new FormData(form);
         const updates = Object.fromEntries(formData.entries());
 
         delete updates.email;
 
-        try{
-            const {data, error} = await supabase.from('profiles').update(
+        try {
+            const { data, error } = await supabase.from('profiles').update(
                 updates
             ).eq('id', user.id);
 
-            if(error){
+            if (error) {
                 console.error('Error updating profile:', error);
-            }else{
+            } else {
                 console.log('Profile updated successfully');
             }
         }
-        catch(error){
+        catch (error) {
             console.error('Error updating profile:', error);
         }
     })
 
 
-// Listen for when a new file is selected
-avatar.addEventListener('change', async () => {
-    // 1. Correct the length check to 'avatar.files.length'
-    if (avatar.files && avatar.files.length > 0) {
-        const file = avatar.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+    // Listen for when a new file is selected
+    avatar.addEventListener('change', async () => {
 
-        try {
-           
-            const { error: uploadError } = await supabase.storage
-                .from('upload-image')
-                .upload(filePath, file);
+        // 1. Correct the length check to 'avatar.files.length'
+        if (avatar.files && avatar.files.length > 0) {
+            const file = avatar.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
 
-            if (uploadError) throw uploadError;
+            try {
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('upload-image')
-                .getPublicUrl(filePath);
+                const { error: uploadError } = await supabase.storage
+                    .from('upload-image')
+                    .upload(filePath, file);
 
-            
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ profile_url: publicUrl })
-                .eq('id', user.id);
+                if (uploadError) throw uploadError;
 
-            if (updateError) throw updateError;
+                const { data: { publicUrl } } = supabase.storage
+                    .from('upload-image')
+                    .getPublicUrl(filePath);
 
-          
-            if (headerAvatar) headerAvatar.src = publicUrl;
-            
-            console.log('Profile photo updated successfully!');
 
-        } catch (error) {
-            console.error('Error uploading/updating profile photo:', error);
-            alert('Failed to upload image. Check your storage policies.');
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ profile_url: publicUrl })
+                    .eq('id', user.id);
+
+                if (updateError) throw updateError;
+
+
+                if (headerAvatar) headerAvatar.src = publicUrl;
+
+                console.log('Profile photo updated successfully!');
+
+            } catch (error) {
+                console.error('Error uploading/updating profile photo:', error);
+                alert('Failed to upload image. Check your storage policies.');
+            }
         }
-    }
-});
+    });
+
+    // Update profile logic consolidated into loadProfileData
 
 
 
 
-   
+
+
+
     // Listen for Auth Changes
     supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
@@ -158,7 +163,6 @@ avatar.addEventListener('change', async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         loadProfileData(user);
-       
     } else {
         // If no user on profile page, redirect to login
         // window.location.href = 'login.html'; 
