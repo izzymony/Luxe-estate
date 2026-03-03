@@ -23,9 +23,7 @@ export async function initAuthUI() {
         if (signupBtn) signupBtn.classList.add('hidden');
 
         if (user) {
-            // --- SIGNED IN STATE ---
-
-            // 1. Set Avatar/Initials
+        
             const metaFirstName = user.user_metadata?.first_name || '';
             const metaLastName = user.user_metadata?.last_name || '';
             const initials = (metaFirstName[0] || user.email[0] || 'U').toUpperCase() + (metaLastName[0] || '').toUpperCase();
@@ -38,7 +36,7 @@ export async function initAuthUI() {
                 }
             }
 
-            // 2. Fetch and Populate Dropdown
+           
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
