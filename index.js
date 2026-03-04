@@ -122,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const beds = property.bedrooms || 0;
             const baths = property.bathrooms || 0;
             const sqft = property.livingArea ? new Intl.NumberFormat().format(property.livingArea) : 'N/A';
+            const id = property.id;
 
             // Collection of varied High-Resolution Fallback Images
             const fallbacks = [
@@ -178,9 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex items-center justify-between mt-4">
                         <span class="text-2xl font-bold text-gray-900">${price}</span>
                         <div class="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white group-hover:bg-brand-600 transition-all shadow-md active:scale-95">
+                         <a href="details.html?id=${id}" class="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white group-hover:bg-brand-600 transition-all shadow-md active:scale-95 cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
+                            </a>
                         </div>
                     </div>
                 </div>

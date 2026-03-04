@@ -195,6 +195,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Navbar Effects & Logic ---
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        const navContainer = nav.querySelector('div');
+
+        if (window.scrollY > 50) {
+            nav.classList.add('py-2');
+            if (navContainer) {
+                navContainer.classList.remove('rounded-2xl', 'max-w-7xl');
+                navContainer.classList.add('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
+            }
+        } else {
+            nav.classList.remove('py-2');
+            if (navContainer) {
+                navContainer.classList.add('rounded-2xl', 'max-w-7xl');
+                navContainer.classList.remove('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
+            }
+        }
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.onclick = () => {
+            mobileMenu.classList.toggle('opacity-0');
+            mobileMenu.classList.toggle('translate-y-[-10px]');
+            mobileMenu.classList.toggle('pointer-events-none');
+            mobileMenu.classList.toggle('opacity-100');
+            mobileMenu.classList.toggle('translate-y-0');
+            mobileMenu.classList.toggle('pointer-events-auto');
+        };
+    }
+
     // --- Authentication & Navbar Logic ---
     fetchPropertyDetails();
     initAuthUI();
