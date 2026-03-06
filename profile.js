@@ -53,9 +53,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows found"
+            if (error) {
                 throw error;
             }
 

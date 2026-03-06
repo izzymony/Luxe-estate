@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
          return;
       }
 
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
       if (!profile || profile.role !== 'agent') {
          window.location.href = 'index.html';
          return;
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
    async function editForm(id) {
       if (!id) return;
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: property, error } = await supabase.from('properties').select('*').eq('id', id).single();
+      const { data: property, error } = await supabase.from('properties').select('*').eq('id', id).maybeSingle();
 
       if (error || !property) {
          alert('Error fetching property details');
