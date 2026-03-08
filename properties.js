@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     searchTerm.addEventListener('input', (e) => {
         const search = e.target.value.toLowerCase();
         const filterProperties = properties.filter(property => {
-            return property.city.toLowerCase().includes(search) || property.state.toLowerCase().includes(search) || property.street.toLowerCase().includes(search);
+            return property.city.toLowerCase().includes(search) || property.state.toLowerCase().includes(search) || property.street.toLowerCase().includes(search) || property.location.toLowerCase().includes(search) || property.type.toLowerCase().includes(search) || property.offer_type.toLowerCase().includes(search) || property.description.toLowerCase().includes(search);
         });
         loadProperties(filterProperties);
     });

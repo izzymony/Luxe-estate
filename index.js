@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileContent = document.getElementById('profile-content')
     const profileInfo = document.getElementById('profile-info')
     const propertyList = document.getElementById('property-list');
+    const searchButton = document.getElementById('search-btn')
 
     // Navbar scroll effect
     window.addEventListener('scroll', () => {
@@ -190,6 +191,133 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             propertyList.appendChild(cardProp);
         });
+
+     async function getPropertyTypes() {
+    const { data: typeData, error: typeError } = await supabase.from('properties').select('type');
+    const propertyTypesSelect = document.getElementById('property-types');
+
+    if (typeError || !propertyTypesSelect) return;
+
+    // 1. Get truly unique types first
+    const uniqueTypes = [];
+    typeData.forEach(item => {
+        if (item.type && !uniqueTypes.includes(item.type)) {
+            uniqueTypes.push(item.type);
+        }
+    });
+
+    propertyTypesSelect.innerHTML = '<option value="">All Types</option>';
+
+    // 2. Loop through UNIQUE types only
+    uniqueTypes.forEach(typeString => {
+        const option = document.createElement('option');
+        option.value = typeString;
+        option.textContent = typeString
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        propertyTypesSelect.appendChild(option);
+    });
+}
+
+async function getPricesRange() {
+    const { data: priceData, error: priceError } = await supabase.from('properties').select('price');
+    if (priceError || !priceData) return;
+
+    const prices = priceData.map(item => item.price).filter(Boolean);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRangeSelect = document.getElementById('price-ranges');
+
+    priceRangeSelect.innerHTML = '<option value="">All Prices</option>';
+    const steps = [500000, 1000000, 2000000, 5000000, 10000000];
+
+    // Under first step
+    if (minPrice < steps[0]) {
+        const opt = document.createElement('option');
+        opt.value = `0-${steps[0]}`;
+        opt.textContent = `Under $${(steps[0] / 1000).toLocaleString()}k`;
+        priceRangeSelect.appendChild(opt);
+    }
+
+    // Intermediate ranges
+    for (let i = 0; i < steps.length - 1; i++) {
+        const lower = steps[i];
+        const upper = steps[i + 1];
+        if (maxPrice > lower && minPrice < upper) {
+            const opt = document.createElement('option');
+            opt.value = `${lower}-${upper}`;
+            opt.textContent = `$${(lower / 1000000)}M - $${(upper / 1000000)}M`;
+            priceRangeSelect.appendChild(opt);
+        }
+    }
+
+    // Over last step (Moved OUTSIDE the loop)
+    if (maxPrice > steps[steps.length - 1]) {
+        const lastStep = steps[steps.length - 1];
+        const opt = document.createElement('option');
+        opt.value = `${lastStep}-999999999`;
+        opt.textContent = `$${(lastStep / 1000000)}M+`;
+        priceRangeSelect.appendChild(opt);
+    }
+}
+
+searchButton.addEventListener('click', async ()=>{
+    const location = document.getElementById('location').value
+    const priceRange = document.getElementById('price-ranges').value
+    const propertyType = document.getElementById('property-types').value
+
+    let query = supabase.from('properties').select('*')
+
+    if(location){
+        query = query.or(`city.ilike.%${location}%, state.ilike.%${location}%`)
+    }
+
+    if(priceRange){
+        const [min, max] = priceRange.split('-')
+        query = query.gte('price', min).lte('price', max)
+    }
+
+    if(propertyType){
+        query = query.eq('type', propertyType)
+    }
+
+    query.then(({data, error})=>{
+        if(error){
+            console.error('Error fetching properties:', error)
+            return
+        }
+
+        const normalizedData = data.map(prop => ({
+              id: prop.id,
+            price: prop.price,
+            offerType: prop.offer_type,
+            realEstateType: prop.type || 'LUXURY_ESTATE',
+            street: prop.street,
+            description: prop.description,
+            city: prop.city,
+            state: prop.state,
+            bedrooms: prop.bedrooms,
+            bathrooms: prop.bathrooms,
+            livingArea: prop.sqft,
+            pictures: [prop.image_url],
+            url: '#',
+            isSupabase: true
+        }))
+        if(normalizedData.length > 0){
+            displayListings(normalizedData)
+        }else{
+            propertyList.innerHTML = '<p class="text-center text-gray-500">No properties found matching your criteria.</p>'
+        }
+    })
+})
+
+
+
+
+    
+getPricesRange() 
+getPropertyTypes()
     }
 
     getUser();
