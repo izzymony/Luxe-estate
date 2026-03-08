@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         propertyList.innerHTML = '';
 
-        properties.slice(0, 9).forEach((property, index) => {
+        properties.forEach((property, index) => {
             const listingUrl = property.url || '#';
             const cardProp = document.createElement('a');
             cardProp.href = listingUrl;
@@ -269,8 +269,8 @@ searchButton.addEventListener('click', async ()=>{
 
     let query = supabase.from('properties').select('*')
 
-    if(location){
-        query = query.or(`city.ilike.%${location}%, state.ilike.%${location}%`)
+    if (location) {
+        query = query.or(`city.ilike.%${location}%,state.ilike.%${location}%,street.ilike.%${location}%`);
     }
 
     if(priceRange){
@@ -288,7 +288,7 @@ searchButton.addEventListener('click', async ()=>{
             return
         }
 
-        const normalizedData = data.map(prop => ({
+        const normalizedData = (data || []).map(prop => ({
               id: prop.id,
             price: prop.price,
             offerType: prop.offer_type,
