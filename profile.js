@@ -76,6 +76,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
                 }
             }
+
+            // Load Favorites Data
+            const favorites = await getSavedFavorites(user.id);
+            if (favorites) {
+                displaySavedFavorites(favorites);
+            }
+
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
@@ -94,6 +101,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
         const form = e.target;
         const formData = new FormData(form);
@@ -108,8 +117,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (error) {
                 console.error('Error updating profile:', error);
+                alert('Error updating profile');
             } else {
-                console.log('Profile updated successfully');
+                alert('Profile updated successfully!');
+                loadProfileData(user); // Refresh UI
             }
         }
         catch (error) {
@@ -120,8 +131,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Listen for when a new file is selected
     avatar.addEventListener('change', async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-        // 1. Correct the length check to 'avatar.files.length'
         if (avatar.files && avatar.files.length > 0) {
             const file = avatar.files[0];
             const fileExt = file.name.split('.').pop();
@@ -129,7 +141,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             const filePath = `${user.id}/${fileName}`;
 
             try {
-
                 const { error: uploadError } = await supabase.storage
                     .from('upload-image')
                     .upload(filePath, file);
@@ -160,13 +171,97 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 
-    // Update profile logic consolidated into loadProfileData
+    // saved favorites functions
+    async function getSavedFavorites(userId) {
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('property_id, properties(*)')
+            .eq('user_id', userId);
 
+        if (error) {
+            console.error('Error fetching favorites:', error);
+            return [];
+        }
+        return data.map(item => item.properties);
+    }
 
+    function displaySavedFavorites(properties) {
+        const container = document.getElementById('saved-properties-container');
+        const badge = document.getElementById('favorites-count-badge');
 
+        if (!container) return;
 
+        if (badge) badge.textContent = properties.length;
+        container.innerHTML = '';
 
+        if (properties.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full py-12 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <p class="text-gray-400 font-medium">No saved properties yet.</p>
+                    <a href="index.html#featured" class="text-brand-600 font-bold hover:underline mt-2 inline-block">Explore Listings</a>
+                </div>`;
+            return;
+        }
 
+        properties.forEach(property => {
+            const price = property.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(property.price) : 'Price on Request';
+            const status = property.offer_type === 'sale' ? 'For Sale' : 'For Rent';
+
+            const card = document.createElement('div');
+            card.className = "group bg-gray-50 rounded-3xl p-3 shadow-none hover:shadow-xl transition-all duration-500 border border-gray-100 overflow-hidden relative";
+            card.innerHTML = `
+                <div class="relative h-48 rounded-[1.5rem] overflow-hidden mb-4 bg-gray-100">
+                    <img src="${property.image_url || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=800&auto=format&fit=crop'}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute top-3 left-3 flex gap-2">
+                        <span class="px-3 py-1 bg-brand-600 text-white text-[10px] font-bold rounded-full shadow-lg z-10">${status}</span>
+                    </div>
+                    <button onclick="unfavorite('${property.id}')" 
+                            class="absolute top-3 right-3 w-8 h-8 bg-white text-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="px-3 pb-2">
+                    <h4 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-brand-600 transition-colors truncate">
+                        ${property.city}, ${property.state}
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-3 truncate">${property.street || 'Location pending'}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xl font-bold text-gray-900">${price}</span>
+                        <a href="details.html?id=${property.id}" class="text-brand-600 hover:text-brand-700 font-bold text-sm">Details</a>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function unfavorite(propertyId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        if (confirm('Remove this property from your favorites?')) {
+            const { error } = await supabase
+                .from('favorites')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('property_id', propertyId);
+
+            if (error) {
+                console.error('Error removing favorite:', error);
+                alert('Failed to remove from favorites');
+            } else {
+                // Refresh list
+                const favorites = await getSavedFavorites(user.id);
+                displaySavedFavorites(favorites);
+            }
+        }
+    }
+
+    // Expose unfavorite to global scope for onclick
+    window.unfavorite = unfavorite;
 
     // Listen for Auth Changes
     supabase.auth.onAuthStateChange((event, session) => {
