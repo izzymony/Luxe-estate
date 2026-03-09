@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         properties.forEach((property, index) => {
             const listingUrl = property.url || '#';
-            const cardProp = document.createElement('a');
+            const cardProp = document.createElement('div');
             cardProp.href = listingUrl;
             cardProp.target = '_blank';
 
@@ -155,11 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="px-4 py-1.5 bg-brand-600 text-white text-xs font-bold rounded-full shadow-lg">${status}</span>
                         <span class="px-4 py-1.5 bg-gray-900/40 backdrop-blur-md text-white text-xs font-bold rounded-full border border-white/20">${type}</span>
                     </div>
-                    <div class="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-all shadow-lg active:scale-90">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button onclick="toggleFavorite('${property.id}')" class="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-all shadow-lg active:scale-90">
+                        <svg id='icon-${property.id}' xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                    </div>
+                    </button>
                 </div>
                 <div class="px-4 pb-4">
                     <div class="flex items-center gap-1 mb-2">
@@ -312,10 +312,32 @@ searchButton.addEventListener('click', async ()=>{
     })
 })
 
+async function toggleFavorite(propertyId){
+    const {data:{user}}= await supabase.auth.getUser()
+     if (!user) return alert("Please login to save properties!");
+
+     if(!propertyId) return 
+
+    const icon = document.getElementById(`icon-${propertyId}`)
+
+    const {data: dataExisting, error} = await supabase.from('favorites').select('*').eq('property_id', propertyId).eq('user_id', user.id)
+    if(error){
+        console.error('Error toggling favorite:', error)
+        return
+    }
+    if(dataExisting.length > 0){
+        await supabase.from('favorites').delete().eq('property_id', propertyId).eq('user_id', user.id)
+        icon.classList.remove('text-red-500', 'fill-current')
+    }else{
+        await supabase.from('favorites').insert({property_id: propertyId, user_id: user.id})
+        icon.classList.add('text-red-500', 'fill-current')
+    }
+}
+
+window.toggleFavorite = toggleFavorite
 
 
-
-    
+  
 getPricesRange() 
 getPropertyTypes()
     }
