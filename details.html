@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -67,6 +70,56 @@
         .gallery-image:hover {
             transform: scale(1.02);
         }
+
+        /* Slider Styles */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 420px;
+            overflow: hidden;
+            border-radius: 2.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .slider-container {
+                height: 520px;
+            }
+        }
+
+        .slider-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.3);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.5);
+        }
     </style>
 </head>
 
@@ -89,7 +142,7 @@
             <div class="hidden md:flex items-center gap-8 font-medium text-gray-600">
                 <a href="index.html" class="hover:text-brand-600 transition-colors">Home</a>
                 <a href="properties.html" class="text-brand-600 font-bold">Properties</a>
-                <a href="#" class="hover:text-brand-600 transition-colors">Agents</a>
+                <a href="agent.html" id="agent" class="hover:text-brand-600 hidden transition-colors">Agents</a>
                 <a href="#" class="hover:text-brand-600 transition-colors">About</a>
             </div>
 
@@ -152,7 +205,28 @@
                 <div class="h-4 w-48 bg-gray-100 rounded-full"></div>
             </div>
         </div>
+
+        
     </main>
+
+    <!-- Location Map Section -->
+    <section class="max-w-7xl mx-auto px-6 mb-20 fade-in" style="animation-delay: 0.4s">
+        <div class="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                    <i data-lucide="map" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Explore the Area</h3>
+                    <p class="text-gray-500 text-sm mt-1">Property location and surrounding neighborhood</p>
+                </div>
+            </div>
+            
+            <div class="rounded-2xl overflow-hidden border border-gray-100 shadow-inner h-[400px] relative z-0">
+                <div id="map" class="w-full h-full"></div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-white pt-16 pb-12 mt-8">

@@ -10,8 +10,10 @@ export async function initAuthUI() {
     const profileInfo = document.getElementById('profile-info');
     const loginBtn = document.getElementById('login');
     const signupBtn = document.getElementById('signup');
+    const agentLink = document.getElementById('agent');
 
-    if (!profileBtn || !profileContent || !profileInfo) {
+
+    if (!profileBtn || !profileContent || !profileInfo || !agentLink) {
         console.warn('Navbar profile elements missing. Ensure #profile, #profile-content, and #profile-info exist.');
     }
 
@@ -21,12 +23,17 @@ export async function initAuthUI() {
         if (profileBtn) profileBtn.classList.remove('hidden');
         if (loginBtn) loginBtn.classList.add('hidden');
         if (signupBtn) signupBtn.classList.add('hidden');
+        if (agentLink) agentLink.classList.add('hidden');
+
+
 
         if (user) {
-        
+          
             const metaFirstName = user.user_metadata?.first_name || '';
             const metaLastName = user.user_metadata?.last_name || '';
             const initials = (metaFirstName[0] || user.email[0] || 'U').toUpperCase() + (metaLastName[0] || '').toUpperCase();
+
+
 
             if (profileContent) {
                 if (user.user_metadata?.avatar_url) {
@@ -36,7 +43,7 @@ export async function initAuthUI() {
                 }
             }
 
-           
+
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
@@ -49,6 +56,10 @@ export async function initAuthUI() {
                     const displayLastName = profile?.last_name || metaLastName || '';
                     const displayEmail = profile?.email || user.email;
                     const displayRole = profile?.role || user.user_metadata?.role || 'Guest';
+
+                    if (agentLink && displayRole === 'agent') {
+                        agentLink.classList.remove('hidden');
+                    }
 
                     profileInfo.innerHTML = `
                         <div class="space-y-4">
@@ -95,6 +106,8 @@ export async function initAuthUI() {
                     </svg>
                 `;
             }
+
+            
 
             if (profileInfo) {
                 profileInfo.innerHTML = `

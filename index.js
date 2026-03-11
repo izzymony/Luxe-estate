@@ -67,22 +67,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sbError) console.error('Supabase fetch error:', sbError);
 
 
-            const normalizedSb = (supabaseData || []).map(prop => ({
-                id: prop.id,
-                price: prop.price,
-                offerType: prop.offer_type,
-                realEstateType: prop.type || 'LUXURY_ESTATE',
-                street: prop.street,
-                description: prop.description,
-                city: prop.city,
-                state: prop.state,
-                bedrooms: prop.bedrooms,
-                bathrooms: prop.bathrooms,
-                livingArea: prop.sqft,
-                pictures: [prop.image_url],
-                url: '#',
-                isSupabase: true
-            }));
+            const normalizedSb = (supabaseData || []).map(prop => {
+                let imgArray = [];
+                try {
+                    imgArray = typeof prop.image_url === 'string' && prop.image_url.startsWith('[')
+                        ? JSON.parse(prop.image_url)
+                        : (Array.isArray(prop.image_url) ? prop.image_url : (prop.image_url ? [prop.image_url] : []));
+                } catch (e) {
+                    imgArray = prop.image_url ? [prop.image_url] : [];
+                }
+
+                return {
+                    id: prop.id,
+                    price: prop.price,
+                    offerType: prop.offer_type,
+                    realEstateType: prop.type || 'LUXURY_ESTATE',
+                    street: prop.street,
+                    description: prop.description,
+                    city: prop.city,
+                    state: prop.state,
+                    bedrooms: prop.bedrooms,
+                    bathrooms: prop.bathrooms,
+                    livingArea: prop.sqft,
+                    pictures: imgArray,
+                    url: '#',
+                    isSupabase: true
+                };
+            });
 
 
             const allListings = [...normalizedSb, ...apiData];
@@ -137,26 +148,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const fallbackImage = fallbacks[index % fallbacks.length];
 
+            let images = [];
+            try {
+                // Determine images based on source
+                if (property.isSupabase) {
+                    // Property already normalized pictures in getListings
+                    images = property.pictures || [];
+                } else if (property.image_url) {
+                    images = typeof property.image_url === 'string' && property.image_url.startsWith('[')
+                        ? JSON.parse(property.image_url)
+                        : (Array.isArray(property.image_url) ? property.image_url : [property.image_url]);
+                } else if (property.pictures) {
+                    images = Array.isArray(property.pictures) ? property.pictures : [property.pictures];
+                }
 
-            let image = (property.pictures && property.pictures.length > 0) ? property.pictures[0] : fallbackImage;
+                // Filter out non-zillow images if that was the intent, but keep fallbacks if empty
+                images = images.filter(img => typeof img === 'string' && (img.startsWith('http') || img.startsWith('/')));
 
-
-            if (image.includes('zillowstatic.com')) {
-
+                if (images.length === 0) images = [fallbackImage];
+            } catch (e) {
+                console.error('Error parsing images:', e);
+                images = [fallbackImage];
             }
 
+            const sliderId = `slider-${id}`;
+
             cardProp.innerHTML = `
-                <div class="relative h-64 rounded-[1.5rem] overflow-hidden mb-6 bg-gray-100">
-                    <img src="${image}" alt="${address}" 
-                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                         style="image-rendering: -webkit-optimize-contrast;"
-                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1512918766674-ed62b9aed97a?q=80&w=1200&auto=format&fit=crop';">
+                <div class="relative h-64 rounded-[1.5rem] overflow-hidden mb-6 bg-gray-100 group/slider">
+                    <div id="${sliderId}-track" class="slider-track">
+                        ${images.map(img => `
+                            <div class="slide">
+                                <img src="${img}" alt="${address}" 
+                                     class="w-full h-full object-cover transition-transform duration-700"
+                                     style="image-rendering: -webkit-optimize-contrast;"
+                                     onerror="this.onerror=null; this.src='${fallbackImage}';">
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Navigation Arrows -->
+                    ${images.length > 1 ? `
+                    <button id="${sliderId}-prev" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-white hover:text-brand-600 z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <button id="${sliderId}-next" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 opacity-0 group-hover/slider:opacity-100 transition-all hover:bg-white hover:text-brand-600 z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    ` : ''}
+
+                    <!-- Slider Dots -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        ${images.length > 1 ? images.map((_, i) => `
+                            <div class="slider-dot w-1.5 h-1.5 rounded-full bg-white/40 transition-all duration-300 ${i === 0 ? 'w-4 bg-white' : ''}" data-index="${i}" data-slider="${sliderId}"></div>
+                        `).join('') : ''}
+                    </div>
+
                     <div class="absolute top-4 left-4 flex gap-2">
                         <span class="px-4 py-1.5 bg-brand-600 text-white text-xs font-bold rounded-full shadow-lg">${status}</span>
                         <span class="px-4 py-1.5 bg-gray-900/40 backdrop-blur-md text-white text-xs font-bold rounded-full border border-white/20">${type}</span>
                     </div>
-                <button onclick="toggleFavorite('${property.id}')" class="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-all shadow-lg active:scale-90">
-                        <svg id='icon-${property.id}' xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button onclick="toggleFavorite('${id}')" class="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-red-500 transition-all shadow-lg active:scale-90">
+                        <svg id='icon-${id}' xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                     </button>
@@ -190,156 +246,231 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             propertyList.appendChild(cardProp);
+
+            // Slider Logic for each card
+            if (images.length > 1) {
+                let currentIdx = 0;
+                const track = document.getElementById(`${sliderId}-track`);
+                const dots = document.querySelectorAll(`.slider-dot[data-slider="${sliderId}"]`);
+                const nextBtn = document.getElementById(`${sliderId}-next`);
+                const prevBtn = document.getElementById(`${sliderId}-prev`);
+
+                const updateSliderView = (newIdx) => {
+                    currentIdx = newIdx;
+                    track.style.transform = `translateX(-${currentIdx * 100}%)`;
+
+                    dots.forEach((dot, i) => {
+                        if (i === currentIdx) {
+                            dot.classList.add('w-4', 'bg-white');
+                            dot.classList.remove('w-1.5', 'bg-white/40');
+                        } else {
+                            dot.classList.remove('w-4', 'bg-white');
+                            dot.classList.add('w-1.5', 'bg-white/40');
+                        }
+                    });
+                };
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentIdx = (currentIdx + 1) % images.length;
+                        updateSliderView(currentIdx);
+                    });
+                }
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentIdx = (currentIdx - 1 + images.length) % images.length;
+                        updateSliderView(currentIdx);
+                    });
+                }
+
+                dots.forEach(dot => {
+                    dot.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        updateSliderView(parseInt(dot.dataset.index));
+                    });
+                });
+
+                // Swipe support
+                let startX = 0;
+                track.addEventListener('touchstart', e => {
+                    startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                track.addEventListener('touchend', e => {
+                    const diff = startX - e.changedTouches[0].clientX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0) nextBtn.click();
+                        else prevBtn.click();
+                    }
+                }, { passive: true });
+            }
         });
 
-     async function getPropertyTypes() {
-    const { data: typeData, error: typeError } = await supabase.from('properties').select('type');
-    const propertyTypesSelect = document.getElementById('property-types');
+        async function getPropertyTypes() {
+            const { data: typeData, error: typeError } = await supabase.from('properties').select('type');
+            const propertyTypesSelect = document.getElementById('property-types');
 
-    if (typeError || !propertyTypesSelect) return;
+            if (typeError || !propertyTypesSelect) return;
 
-    // 1. Get truly unique types first
-    const uniqueTypes = [];
-    typeData.forEach(item => {
-        if (item.type && !uniqueTypes.includes(item.type)) {
-            uniqueTypes.push(item.type);
-        }
-    });
+            // 1. Get truly unique types first
+            const uniqueTypes = [];
+            typeData.forEach(item => {
+                if (item.type && !uniqueTypes.includes(item.type)) {
+                    uniqueTypes.push(item.type);
+                }
+            });
 
-    propertyTypesSelect.innerHTML = '<option value="">All Types</option>';
+            propertyTypesSelect.innerHTML = '<option value="">All Types</option>';
 
-    // 2. Loop through UNIQUE types only
-    uniqueTypes.forEach(typeString => {
-        const option = document.createElement('option');
-        option.value = typeString;
-        option.textContent = typeString
-            .split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-        propertyTypesSelect.appendChild(option);
-    });
-}
-
-async function getPricesRange() {
-    const { data: priceData, error: priceError } = await supabase.from('properties').select('price');
-    if (priceError || !priceData) return;
-
-    const prices = priceData.map(item => item.price).filter(Boolean);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const priceRangeSelect = document.getElementById('price-ranges');
-
-    priceRangeSelect.innerHTML = '<option value="">All Prices</option>';
-    const steps = [500000, 1000000, 2000000, 5000000, 10000000];
-
-    // Under first step
-    if (minPrice < steps[0]) {
-        const opt = document.createElement('option');
-        opt.value = `0-${steps[0]}`;
-        opt.textContent = `Under $${(steps[0] / 1000).toLocaleString()}k`;
-        priceRangeSelect.appendChild(opt);
-    }
-
-    // Intermediate ranges
-    for (let i = 0; i < steps.length - 1; i++) {
-        const lower = steps[i];
-        const upper = steps[i + 1];
-        if (maxPrice > lower && minPrice < upper) {
-            const opt = document.createElement('option');
-            opt.value = `${lower}-${upper}`;
-            opt.textContent = `$${(lower / 1000000)}M - $${(upper / 1000000)}M`;
-            priceRangeSelect.appendChild(opt);
-        }
-    }
-
-    // Over last step (Moved OUTSIDE the loop)
-    if (maxPrice > steps[steps.length - 1]) {
-        const lastStep = steps[steps.length - 1];
-        const opt = document.createElement('option');
-        opt.value = `${lastStep}-999999999`;
-        opt.textContent = `$${(lastStep / 1000000)}M+`;
-        priceRangeSelect.appendChild(opt);
-    }
-}
-
-searchButton.addEventListener('click', async ()=>{
-    const location = document.getElementById('location').value
-    const priceRange = document.getElementById('price-ranges').value
-    const propertyType = document.getElementById('property-types').value
-
-    let query = supabase.from('properties').select('*')
-
-    if (location) {
-        query = query.or(`city.ilike.%${location}%,state.ilike.%${location}%,street.ilike.%${location}%`);
-    }
-
-    if(priceRange){
-        const [min, max] = priceRange.split('-')
-        query = query.gte('price', min).lte('price', max)
-    }
-
-    if(propertyType){
-        query = query.eq('type', propertyType)
-    }
-
-    query.then(({data, error})=>{
-        if(error){
-            console.error('Error fetching properties:', error)
-            return
+            // 2. Loop through UNIQUE types only
+            uniqueTypes.forEach(typeString => {
+                const option = document.createElement('option');
+                option.value = typeString;
+                option.textContent = typeString
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+                propertyTypesSelect.appendChild(option);
+            });
         }
 
-        const normalizedData = (data || []).map(prop => ({
-              id: prop.id,
-            price: prop.price,
-            offerType: prop.offer_type,
-            realEstateType: prop.type || 'LUXURY_ESTATE',
-            street: prop.street,
-            description: prop.description,
-            city: prop.city,
-            state: prop.state,
-            bedrooms: prop.bedrooms,
-            bathrooms: prop.bathrooms,
-            livingArea: prop.sqft,
-            pictures: [prop.image_url],
-            url: '#',
-            isSupabase: true
-        }))
-        if(normalizedData.length > 0){
-            displayListings(normalizedData)
-        }else{
-            propertyList.innerHTML = '<p class="text-center text-gray-500">No properties found matching your criteria.</p>'
+        async function getPricesRange() {
+            const { data: priceData, error: priceError } = await supabase.from('properties').select('price');
+            if (priceError || !priceData) return;
+
+            const prices = priceData.map(item => item.price).filter(Boolean);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRangeSelect = document.getElementById('price-ranges');
+
+            priceRangeSelect.innerHTML = '<option value="">All Prices</option>';
+            const steps = [500000, 1000000, 2000000, 5000000, 10000000];
+
+            // Under first step
+            if (minPrice < steps[0]) {
+                const opt = document.createElement('option');
+                opt.value = `0-${steps[0]}`;
+                opt.textContent = `Under $${(steps[0] / 1000).toLocaleString()}k`;
+                priceRangeSelect.appendChild(opt);
+            }
+
+            // Intermediate ranges
+            for (let i = 0; i < steps.length - 1; i++) {
+                const lower = steps[i];
+                const upper = steps[i + 1];
+                if (maxPrice > lower && minPrice < upper) {
+                    const opt = document.createElement('option');
+                    opt.value = `${lower}-${upper}`;
+                    opt.textContent = `$${(lower / 1000000)}M - $${(upper / 1000000)}M`;
+                    priceRangeSelect.appendChild(opt);
+                }
+            }
+
+            // Over last step (Moved OUTSIDE the loop)
+            if (maxPrice > steps[steps.length - 1]) {
+                const lastStep = steps[steps.length - 1];
+                const opt = document.createElement('option');
+                opt.value = `${lastStep}-999999999`;
+                opt.textContent = `$${(lastStep / 1000000)}M+`;
+                priceRangeSelect.appendChild(opt);
+            }
         }
-    })
-})
 
-async function toggleFavorite(propertyId){
-    const {data:{user}}= await supabase.auth.getUser()
-     if (!user) return alert("Please login to save properties!");
+        searchButton.addEventListener('click', async () => {
+            const location = document.getElementById('location').value
+            const priceRange = document.getElementById('price-ranges').value
+            const propertyType = document.getElementById('property-types').value
 
-     if(!propertyId) return 
+            let query = supabase.from('properties').select('*')
 
-    const icon = document.getElementById(`icon-${propertyId}`)
+            if (location) {
+                query = query.or(`city.ilike.%${location}%,state.ilike.%${location}%,street.ilike.%${location}%`);
+            }
 
-    const {data: dataExisting, error} = await supabase.from('favorites').select('*').eq('property_id', propertyId).eq('user_id', user.id)
-    if(error){
-        console.error('Error toggling favorite:', error)
-        return
-    }
-    if(dataExisting.length > 0){
-        await supabase.from('favorites').delete().eq('property_id', propertyId).eq('user_id', user.id)
-        icon.classList.remove('text-red-500', 'fill-current')
-    }else{
-        await supabase.from('favorites').insert({property_id: propertyId, user_id: user.id})
-        icon.classList.add('text-red-500', 'fill-current')
-    }
-}
+            if (priceRange) {
+                const [min, max] = priceRange.split('-')
+                query = query.gte('price', min).lte('price', max)
+            }
 
-window.toggleFavorite = toggleFavorite
+            if (propertyType) {
+                query = query.eq('type', propertyType)
+            }
+
+            query.then(({ data, error }) => {
+                if (error) {
+                    console.error('Error fetching properties:', error)
+                    return
+                }
+
+                const normalizedData = (data || []).map(prop => {
+                    let imgArray = [];
+                    try {
+                        imgArray = typeof prop.image_url === 'string' && prop.image_url.startsWith('[')
+                            ? JSON.parse(prop.image_url)
+                            : (Array.isArray(prop.image_url) ? prop.image_url : (prop.image_url ? [prop.image_url] : []));
+                    } catch (e) {
+                        imgArray = prop.image_url ? [prop.image_url] : [];
+                    }
+
+                    return {
+                        id: prop.id,
+                        price: prop.price,
+                        offerType: prop.offer_type,
+                        realEstateType: prop.type || 'LUXURY_ESTATE',
+                        street: prop.street,
+                        description: prop.description,
+                        city: prop.city,
+                        state: prop.state,
+                        bedrooms: prop.bedrooms,
+                        bathrooms: prop.bathrooms,
+                        livingArea: prop.sqft,
+                        pictures: imgArray,
+                        url: '#',
+                        isSupabase: true
+                    };
+                })
+                if (normalizedData.length > 0) {
+                    displayListings(normalizedData)
+                } else {
+                    propertyList.innerHTML = '<p class="text-center text-gray-500">No properties found matching your criteria.</p>'
+                }
+            })
+        })
+
+        async function toggleFavorite(propertyId) {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return alert("Please login to save properties!");
+
+            if (!propertyId) return
+
+            const icon = document.getElementById(`icon-${propertyId}`)
+
+            const { data: dataExisting, error } = await supabase.from('favorites').select('*').eq('property_id', propertyId).eq('user_id', user.id)
+            if (error) {
+                console.error('Error toggling favorite:', error)
+                return
+            }
+            if (dataExisting.length > 0) {
+                await supabase.from('favorites').delete().eq('property_id', propertyId).eq('user_id', user.id)
+                icon.classList.remove('text-red-500', 'fill-current')
+            } else {
+                await supabase.from('favorites').insert({ property_id: propertyId, user_id: user.id })
+                icon.classList.add('text-red-500', 'fill-current')
+            }
+        }
+
+        window.toggleFavorite = toggleFavorite
 
 
-  
-getPricesRange() 
-getPropertyTypes()
+
+        getPricesRange()
+        getPropertyTypes()
     }
 
     getUser();

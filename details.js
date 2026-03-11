@@ -2,63 +2,72 @@ import { supabase } from "./subabase.js";
 import { initAuthUI } from "./auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const propertyId = urlParams.get('id');
-    const mainContent = document.getElementById('dynamic-content');
-    if (!propertyId) {
-        if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-red-500 font-bold text-xl">Property ID missing in URL.</p></div>';
-        return;
-    }
+  const urlParams = new URLSearchParams(window.location.search);
+  const propertyId = urlParams.get('id');
+  const mainContent = document.getElementById('dynamic-content');
+  if (!propertyId) {
+    if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-red-500 font-bold text-xl">Property ID missing in URL.</p></div>';
+    return;
+  }
 
-    async function fetchPropertyDetails() {
+  async function fetchPropertyDetails() {
 
-        try {
-            const { data, error } = await supabase.from('properties').select('*').eq('id', propertyId).single();
-            if (error) throw error;
-            if (data) {
-                // Fetch agent profile details
-                let agentData = null;
-                if (data.agent_id) {
-                    const { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('first_name, last_name, profile_url, role')
-                        .eq('id', data.agent_id)
-                        .maybeSingle();
+    try {
+      const { data, error } = await supabase.from('properties').select('*').eq('id', propertyId).single();
+      if (error) throw error;
+      if (data) {
+        // Fetch agent profile details
+        let agentData = null;
+        if (data.agent_id) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, profile_url, role')
+            .eq('id', data.agent_id)
+            .maybeSingle();
 
-                    if (!profileError) {
-                        agentData = profile;
-                    }
-                }
-
-                renderPropertyPage(data, agentData);
-            } else {
-                if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-gray-500 font-bold text-xl">Property not found.</p></div>';
-            }
-        } catch (err) {
-            console.error("Error fetching property:", err);
-            if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-red-500 font-bold text-xl">Error loading property details.</p></div>';
+          if (!profileError) {
+            agentData = profile;
+          }
         }
 
-
+        renderPropertyPage(data, agentData);
+      } else {
+        if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-gray-500 font-bold text-xl">Property not found.</p></div>';
+      }
+    } catch (err) {
+      console.error("Error fetching property:", err);
+      if (mainContent) mainContent.innerHTML = '<div class="text-center py-20"><p class="text-red-500 font-bold text-xl">Error loading property details.</p></div>';
     }
 
-    function renderPropertyPage(property, agent = null) {
-        if (!mainContent) return;
 
-        const price = `$${(property.price || 0).toLocaleString()}`;
-        const address = property.street || '';
-        const city = property.city || '';
-        const state = property.state || '';
-        const beds = property.bedrooms || '-';
-        const baths = property.bathrooms || '-';
-        const sqft = property.sqft ? property.sqft.toLocaleString() : '-';
-        const status = property.offer_type || 'For Sale';
-        const type = property.type || 'Property';
-        const title = property.title || `${type} in ${city}`;
-        const description = property.description || 'No description available for this property.';
-        const imageUrl = property.image_url || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2000';
+  }
 
-        mainContent.innerHTML = `
+  function renderPropertyPage(property, agent = null) {
+    if (!mainContent) return;
+
+    let images = [];
+    try {
+      images = typeof property.image_url === 'string' && property.image_url.startsWith('[')
+        ? JSON.parse(property.image_url)
+        : (Array.isArray(property.image_url) ? property.image_url : (property.image_url ? [property.image_url] : []));
+    } catch (e) {
+      images = property.image_url ? [property.image_url] : [];
+    }
+
+    const mainImageUrl = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2000';
+    const price = `$${(property.price || 0).toLocaleString()}`;
+    const address = property.street || '';
+    const city = property.city || '';
+    const state = property.state || '';
+    const beds = property.bedrooms || '-';
+    const baths = property.bathrooms || '-';
+    const sqft = property.sqft ? property.sqft.toLocaleString() : '-';
+    const status = property.offer_type || 'For Sale';
+    const type = property.type || 'Property';
+    const title = property.title || `${type} in ${city}`;
+    const description = property.description || 'No description available for this property.';
+
+    mainContent.innerHTML = `
            <div class="max-w-7xl mx-auto px-6">
 
   <!-- Breadcrumbs -->
@@ -111,45 +120,47 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Gallery -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12 fade-in">
 
-    <!-- Main Image -->
-    <div class="md:col-span-3 rounded-[2.5rem] overflow-hidden relative group shadow-2xl">
-      <img
-        src="${imageUrl}"
-        alt="${title}"
-        class="w-full h-[420px] md:h-[520px] object-cover transition-transform duration-700 group-hover:scale-105"
-        onerror="this.src='https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2000'"
-      />
+    <!-- Main Image Slider -->
+    <div class="md:col-span-3 slider-container group shadow-2xl relative">
+      <div id="slider-track" class="slider-track">
+        ${images.map(img => `
+          <div class="slide">
+            <img
+              src="${img}"
+              alt="${title}"
+              onerror="this.src='https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2000'"
+            />
+          </div>
+        `).join('')}
+      </div>
 
-      <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+      <!-- Navigation Arrows -->
+      <button id="prev-btn" class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:text-brand-600 z-10">
+        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+      </button>
+      <button id="next-btn" class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30 opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:text-brand-600 z-10">
+        <i data-lucide="chevron-right" class="w-6 h-6"></i>
+      </button>
 
-      <div class="absolute bottom-6 left-6">
-        <button class="bg-white/95 backdrop-blur-md text-gray-900 px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
-          <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-brand-600"></i>
-          Full Gallery
-        </button>
+      <!-- Slider Dots -->
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        ${images.map((_, i) => `
+          <div class="slider-dot w-2 h-2 rounded-full bg-white/40 transition-all duration-300 ${i === 0 ? 'w-6 bg-white' : ''}" data-index="${i}"></div>
+        `).join('')}
       </div>
     </div>
 
     <!-- Side Thumbnails -->
-    <div class="hidden md:flex flex-col gap-4">
-
-      <div class="h-[250px] rounded-[2rem] overflow-hidden shadow-lg">
-        <img
-          src="${imageUrl}"
-          class="w-full h-full object-cover opacity-90 hover:opacity-100 transition cursor-pointer"
-        />
-      </div>
-
-      <div class="h-[250px] rounded-[2rem] overflow-hidden relative group shadow-lg cursor-pointer">
-        <img
-          src="${imageUrl}"
-          class="w-full h-full object-cover opacity-90 hover:opacity-100 transition"
-        />
-        <div class="absolute inset-0 bg-gray-900/40 flex items-center justify-center backdrop-blur-[2px]">
-          <span class="text-white font-black text-xl">+12</span>
+    <div class="hidden md:flex flex-col gap-4 overflow-y-auto max-h-[520px] pr-2 custom-scrollbar">
+      ${images.map((img, idx) => `
+        <div class="h-[120px] min-h-[120px] rounded-[1.5rem] overflow-hidden shadow-lg border-2 ${idx === 0 ? 'border-brand-600' : 'border-transparent'} hover:border-brand-400 transition cursor-pointer thumbnail-container" data-index="${idx}">
+          <img
+            src="${img}"
+            class="w-full h-full object-cover opacity-90 hover:opacity-100 transition"
+            onerror="this.src='https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=2000'"
+          />
         </div>
-      </div>
-
+      `).join('')}
     </div>
 
   </div>
@@ -190,12 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </h2>
 
           <div class="text-gray-600 leading-relaxed">
-            ${
-              description
-                .split('\n')
-                .map(p => p.trim() ? `<p class="mb-4">${p}</p>` : '')
-                .join('')
-            }
+            ${description
+        .split('\n')
+        .map(p => p.trim() ? `<p class="mb-4">${p}</p>` : '')
+        .join('')
+      }
           </div>
         </div>
 
@@ -208,14 +218,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </h3>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${['Smart Integration','Private Balcony','Climate Control','Home Cinema','Gourmet Kitchen','Concierge']
-              .map(amenity => `
+            ${['Smart Integration', 'Private Balcony', 'Climate Control', 'Home Cinema', 'Gourmet Kitchen', 'Concierge']
+        .map(amenity => `
                 <div class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border hover:bg-white transition">
                   <i data-lucide="check-circle-2" class="w-5 h-5 text-brand-600"></i>
                   <span class="font-bold text-xs tracking-tight">${amenity}</span>
                 </div>
               `).join('')
-            }
+      }
           </div>
 
         </div>
@@ -274,58 +284,152 @@ document.addEventListener('DOMContentLoaded', () => {
 
     </div>
 
-  </div>
-
-</div>
         `;
 
-        // Handle Contact Form Submission
+    // Slider Logic Implementation
+    let currentIndex = 0;
+    const totalSlides = images.length;
+    const track = document.getElementById('slider-track');
+    const dots = document.querySelectorAll('.slider-dot');
+    const thumbnails = document.querySelectorAll('.thumbnail-container');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
 
-        // Re-initialize Lucide icons for the new content
-        if (window.lucide) {
-            window.lucide.createIcons();
+    const updateSlider = (index) => {
+      if (!track) return;
+      currentIndex = index;
+
+      // Move track
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+      // Update dots
+      dots.forEach((dot, i) => {
+        if (i === currentIndex) {
+          dot.classList.add('w-6', 'bg-white');
+          dot.classList.remove('w-2', 'bg-white/40');
+        } else {
+          dot.classList.remove('w-6', 'bg-white');
+          dot.classList.add('w-2', 'bg-white/40');
         }
+      });
+
+      // Update thumbnails border
+      thumbnails.forEach((thumb, i) => {
+        if (i === currentIndex) {
+          thumb.classList.add('border-brand-600');
+          thumb.classList.remove('border-transparent');
+        } else {
+          thumb.classList.remove('border-brand-600');
+          thumb.classList.add('border-transparent');
+        }
+      });
+    };
+
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        currentIndex = (currentIndex + 1) % totalSlides;
+        updateSlider(currentIndex);
+      };
     }
 
-    // --- Navbar Effects & Logic ---
-    window.addEventListener('scroll', () => {
-        const nav = document.getElementById('navbar');
-        const navContainer = nav.querySelector('div');
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+        updateSlider(currentIndex);
+      };
+    }
 
-        if (window.scrollY > 50) {
-            nav.classList.add('py-2');
-            if (navContainer) {
-                navContainer.classList.remove('rounded-2xl', 'max-w-7xl');
-                navContainer.classList.add('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
-            }
-        } else {
-            nav.classList.remove('py-2');
-            if (navContainer) {
-                navContainer.classList.add('rounded-2xl', 'max-w-7xl');
-                navContainer.classList.remove('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
-            }
-        }
+    dots.forEach(dot => {
+      dot.onclick = (e) => updateSlider(parseInt(e.target.dataset.index));
     });
 
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.onclick = () => {
-            mobileMenu.classList.toggle('opacity-0');
-            mobileMenu.classList.toggle('translate-y-[-10px]');
-            mobileMenu.classList.toggle('pointer-events-none');
-            mobileMenu.classList.toggle('opacity-100');
-            mobileMenu.classList.toggle('translate-y-0');
-            mobileMenu.classList.toggle('pointer-events-auto');
-        };
+    thumbnails.forEach(thumb => {
+      thumb.onclick = (e) => updateSlider(parseInt(e.currentTarget.dataset.index));
+    });
+
+    // Swipe support basic implementation
+    let startX = 0;
+    if (track) {
+      track.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+      track.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) nextBtn.click();
+          else prevBtn.click();
+        }
+      });
     }
 
+    // Handle Contact Form Submission
+    // Re-initialize Lucide icons for the new content
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }
+
+  // --- Navbar Effects & Logic ---
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    const navContainer = nav.querySelector('div');
+
+    if (window.scrollY > 50) {
+      nav.classList.add('py-2');
+      if (navContainer) {
+        navContainer.classList.remove('rounded-2xl', 'max-w-7xl');
+        navContainer.classList.add('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
+      }
+    } else {
+      nav.classList.remove('py-2');
+      if (navContainer) {
+        navContainer.classList.add('rounded-2xl', 'max-w-7xl');
+        navContainer.classList.remove('rounded-none', 'max-w-full', 'border-transparent', 'bg-white/90');
+      }
+    }
+  });
+
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.onclick = () => {
+      mobileMenu.classList.toggle('opacity-0');
+      mobileMenu.classList.toggle('translate-y-[-10px]');
+      mobileMenu.classList.toggle('pointer-events-none');
+      mobileMenu.classList.toggle('opacity-100');
+      mobileMenu.classList.toggle('translate-y-0');
+      mobileMenu.classList.toggle('pointer-events-auto');
+    };
+  }
+
+  const map = L.map('map').setView([51.505, -0.09], 13);
+  const marker = L.marker([51.505, -0.09]).addTo(map);
+  const circle = L.circle([51.508, -0.11], {
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5,
+    radius: 500
+}).addTo(map);
+
+  marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+  map.on('click', function(e) {
+    marker.setLatLng(e.latlng);
+    marker.bindPopup(e.latlng.toString()).openPopup();
+    circle.setLatLng(e.latlng);
+    circle.bindPopup(e.latlng.toString()).openPopup();
+  });
 
 
 
 
-    // --- Authentication & Navbar Logic ---
-    fetchPropertyDetails();
-    initAuthUI();
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+
+
+
+  // --- Authentication & Navbar Logic ---
+  fetchPropertyDetails();
+  initAuthUI();
 });

@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
    const modalBackdrop = document.getElementById('upload-modal-backdrop');
    const uploadForm = document.getElementById('upload-form');
    let edittingPropertyId = null;
+   let selectedFiles = []; // Array to store files for upload
 
    async function protectAgentPage() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,19 +41,75 @@ document.addEventListener('DOMContentLoaded', () => {
          uploadModal.classList.remove('flex');
          document.body.style.overflow = 'auto';
          uploadForm.reset();
+         selectedFiles = [];
+         const previewContainer = document.getElementById('selected-images-preview');
+         if (previewContainer) previewContainer.innerHTML = '';
       }
    };
+
+   // --- Image Preview & Cumulative Selection Logic ---
+   const fileInput = document.getElementById('property-image');
+   const previewContainer = document.getElementById('selected-images-preview');
+
+   if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+         const files = Array.from(e.target.files);
+
+         // Add new files to our global selectedFiles array
+         files.forEach(file => {
+            // Check if file is already added (optional)
+            const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+               selectedFiles.push(file);
+            }
+         });
+
+         renderSelectedPreviews();
+         // Reset input so the same file can be picked again if removed
+         fileInput.value = '';
+      });
+   }
+
+   function renderSelectedPreviews() {
+      if (!previewContainer) return;
+      previewContainer.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+         const reader = new FileReader();
+         const div = document.createElement('div');
+         div.className = 'relative group aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200';
+
+         div.innerHTML = `
+            <img class="w-full h-full object-cover" src="" alt="preview">
+            <button type="button" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" data-index="${index}">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+               </svg>
+            </button>
+         `;
+
+         reader.onload = (e) => {
+            div.querySelector('img').src = e.target.result;
+         };
+         reader.readAsDataURL(file);
+
+         div.querySelector('button').onclick = (e) => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            selectedFiles.splice(idx, 1);
+            renderSelectedPreviews();
+         };
+
+         previewContainer.appendChild(div);
+      });
+   }
 
    if (openModalBtn) openModalBtn.onclick = () => toggleModal(true);
    if (closeModalBtn) closeModalBtn.onclick = () => toggleModal(false);
    if (modalBackdrop) modalBackdrop.onclick = () => toggleModal(false);
 
-   // Handle Upload
    if (uploadForm) {
       uploadForm.onsubmit = async (e) => {
          e.preventDefault();
          const submitBtn = document.getElementById('submit-listing-btn');
-         const fileInput = document.getElementById('property-image');
          const originalText = submitBtn.innerText;
 
          try {
@@ -60,26 +117,28 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerText = edittingPropertyId ? 'Saving Changes...' : 'Uploading...';
 
             const { data: { user } } = await supabase.auth.getUser();
-            let uploadedImageUrl = null;
+            let uploadedImageUrl = [];
 
-            // 1. Handle Image Upload (Optional if editing)
-            if (fileInput.files && fileInput.files.length > 0) {
-               const file = fileInput.files[0];
-               const fileExt = file.name.split('.').pop();
-               const fileName = `${Math.random()}.${fileExt}`;
-               const filePath = `${user.id}/${fileName}`;
+            if (selectedFiles.length > 0) {
+               const uploadPromises = selectedFiles.map(async (file) => {
+                  const fileExt = file.name.split('.').pop();
+                  const fileName = `${Math.random()}.${fileExt}`;
+                  const filePath = `${user.id}/${fileName}`;
 
-               const { error: uploadError } = await supabase.storage
-                  .from('property-images')
-                  .upload(filePath, file);
+                  const { error: uploadError } = await supabase.storage
+                     .from('property-images')
+                     .upload(filePath, file);
 
-               if (uploadError) throw uploadError;
+                  if (uploadError) throw uploadError;
 
-               const { data: { publicUrl } } = supabase.storage
-                  .from('property-images')
-                  .getPublicUrl(filePath);
+                  const { data: { publicUrl } } = supabase.storage
+                     .from('property-images')
+                     .getPublicUrl(filePath);
 
-               uploadedImageUrl = publicUrl;
+                  uploadedImageUrl.push(publicUrl);
+               });
+
+               await Promise.all(uploadPromises);
             } else if (!edittingPropertyId) {
                alert('Please select an image file for your new listing.');
                submitBtn.disabled = false;
@@ -101,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                description: document.getElementById('property-description').value,
             };
 
-            if (uploadedImageUrl) {
+            if (uploadedImageUrl.length > 0) {
                propertyData.image_url = uploadedImageUrl;
             }
 
@@ -136,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    async function loadAgentListings(userId) {
+
+
+
       try {
          agentListings.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-gray-500">Loading your listings...</p></div>';
 
@@ -167,17 +229,48 @@ document.addEventListener('DOMContentLoaded', () => {
          properties.forEach(prop => {
             const card = document.createElement('div');
             card.className = 'group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 overflow-hidden';
+            let images = [];
+            try {
+               images = typeof prop.image_url === 'string' && prop.image_url.startsWith('[')
+                  ? JSON.parse(prop.image_url)
+                  : (Array.isArray(prop.image_url) ? prop.image_url : [prop.image_url]);
+
+               // Filter out nulls
+               images = images.filter(img => img);
+            } catch (e) {
+               console.error("Error parsing image URL:", e);
+               images = Array.isArray(prop.image_url) ? prop.image_url : [prop.image_url];
+            }
 
             const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(prop.price);
 
             card.innerHTML = `
-               <div class="relative h-48 rounded-[1.5rem] overflow-hidden mb-6 bg-gray-100">
-                  <img src="${prop.image_url}" alt="${prop.street}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                  <div class="absolute top-4 left-4 flex gap-2">
-                     <span class="px-3 py-1 bg-brand-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">${prop.offer_type}</span>
-                     <span class="px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">${prop.type}</span>
-                  </div>
-               </div>
+                <div class="card-slider-container group/slider mb-6" data-current="0" data-total="${images.length}">
+                   <div class="card-slider-track">
+                      ${images.map(img => `
+                         <div class="card-slide">
+                            <img src="${img}" alt="${prop.street}" onerror="this.src='https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=800'">
+                         </div>
+                      `).join('')}
+                   </div>
+                   
+                   ${images.length > 1 ? `
+                      <button class="card-slider-btn left-2 card-prev-btn">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                      <button class="card-slider-btn right-2 card-next-btn">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                      <div class="card-slider-dots">
+                         ${images.map((_, i) => `<div class="card-dot ${i === 0 ? 'active' : ''}"></div>`).join('')}
+                      </div>
+                   ` : ''}
+
+                   <div class="absolute top-4 left-4 flex gap-2 z-20">
+                      <span class="px-3 py-1 bg-brand-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">${prop.offer_type}</span>
+                      <span class="px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">${prop.type}</span>
+                   </div>
+                </div>
                <div class="px-2 pb-2">
                   <h4 class="text-lg font-bold text-gray-900 mb-1 truncate">${prop.street}</h4>
                   <p class="text-sm text-gray-400 mb-4">${prop.city}, ${prop.state}</p>
@@ -244,12 +337,39 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    agentListings.addEventListener('click', (e) => {
-      // Check if the clicked element (or its parent) is our edit button
+      // 1. Handle Card Slider Navigation
+      const nextBtn = e.target.closest('.card-next-btn');
+      const prevBtn = e.target.closest('.card-prev-btn');
+
+      if (nextBtn || prevBtn) {
+         const container = e.target.closest('.card-slider-container');
+         const track = container.querySelector('.card-slider-track');
+         const dots = container.querySelectorAll('.card-dot');
+         let current = parseInt(container.dataset.current);
+         const total = parseInt(container.dataset.total);
+
+         if (nextBtn) {
+            current = (current + 1) % total;
+         } else {
+            current = (current - 1 + total) % total;
+         }
+
+         container.dataset.current = current;
+         track.style.transform = `translateX(-${current * 100}%)`;
+
+         // Update dots
+         dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === current);
+         });
+         return; // Stop here
+      }
+
+      // 2. Handle Edit Button
       const editBtn = e.target.closest('.edit-listing-btn');
 
       if (editBtn) {
          const id = editBtn.dataset.id;
-         editForm(id); // Pass the ID to your edit function
+         editForm(id);
       }
    });
 

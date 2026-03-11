@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuthUI();
 
 
+const rateLimiter = rateLimit(fetchProperties,2000)
 
-
-    async function fetchProperties() {
+     async function fetchProperties () {
 
         const { data, error } = await supabase.from('properties').select('*')
             .order('created_at', { ascending: false })
@@ -45,11 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
     }
-
-
-
-
-    fetchProperties();
+    rateLimiter()
 
     function loadProperties(filterProperties) {
         propertyContainer.innerHTML =
@@ -117,11 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function rateLimit(fn, delay){
+        let timer;
+
+        return(...args) =>{
+            clearTimeout(timer)
+            timer = setTimeout(()=>{
+                fn(...args)
+            }, delay)
+        }
+    }
 
     searchTerm.addEventListener('input', (e) => {
         const search = e.target.value.toLowerCase();
         const filterProperties = properties.filter(property => {
-            return property.city.toLowerCase().includes(search) || property.state.toLowerCase().includes(search) || property.street.toLowerCase().includes(search) || property.location.toLowerCase().includes(search) || property.type.toLowerCase().includes(search) || property.offer_type.toLowerCase().includes(search) || property.description.toLowerCase().includes(search);
+            return property.city.toLowerCase().includes(search) || property.state.toLowerCase().includes(search) || property.street.toLowerCase().includes(search) || property.location.toLowerCase().includes(search) || property.type.toLowerCase().includes(search) || property.offer_type.toLowerCase().includes(search) || property.description.toLowerCase().includes(search) || property.price.toLocaleString().includes(search);
         });
         loadProperties(filterProperties);
     });
