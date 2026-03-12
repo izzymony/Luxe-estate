@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPropertyPage(property, agent = null) {
     if (!mainContent) return;
 
+    
+    
+
     let images = [];
     try {
       images = typeof property.image_url === 'string' && property.image_url.startsWith('[')
@@ -285,6 +288,74 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
         `;
+    
+    setTimeout(async () => {
+        let lat = 51.505;
+        let lng = -0.09;
+        const fullAddress = `${address},${city}, ${state}`.replace(/^, /, '').trim();
+
+        try {
+            // Fetch real coordinates from OpenStreetMap's Nominatim
+            if (fullAddress) {
+                console.log("Searching coordinates for:", fullAddress);
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`, {
+                    headers: {
+                        'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lng = parseFloat(data[0].lon);
+                    console.log("Found coordinates:", lat, lng);
+                } else {
+                    console.warn("Full address not found, trying city/state fallback...");
+                    // Fallback to city/state if full address fails
+                    const fallbackAddress = `${city}, ${state}`.replace(/^, /, '').trim();
+                    if (fallbackAddress) {
+                        const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackAddress)}`, {
+                            headers: {
+                                'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)'
+                            }
+                        });
+                        const fallbackData = await fallbackResponse.json();
+                        if (fallbackData && fallbackData.length > 0) {
+                            lat = parseFloat(fallbackData[0].lat);
+                            lng = parseFloat(fallbackData[0].lon);
+                            console.log("Found fallback coordinates:", lat, lng);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Geocoding failed:", error);
+        }
+
+        // Initialize Map
+        const map = L.map('map').setView([lat, lng], 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Add Marker
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(`<b>${title}</b><br>${fullAddress}`).openPopup();
+        
+        
+        // Add Circle radius (approximate neighborhood)
+        const circle = L.circle([lat, lng], {
+            color: '#0ea5e9', // Brand color
+            fillColor: '#0ea5e9',
+            fillOpacity: 0.15,
+            radius: 800
+        }).addTo(map);
+        circle.bindPopup(`<b>${title}</b><br>${fullAddress}`).openPopup();
+       
+    }, 100);
+
 
     // Slider Logic Implementation
     let currentIndex = 0;
@@ -401,32 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  const map = L.map('map').setView([51.505, -0.09], 13);
-  const marker = L.marker([51.505, -0.09]).addTo(map);
-  const circle = L.circle([51.508, -0.11], {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 500
-}).addTo(map);
-
-  marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
-  map.on('click', function(e) {
-    marker.setLatLng(e.latlng);
-    marker.bindPopup(e.latlng.toString()).openPopup();
-    circle.setLatLng(e.latlng);
-    circle.bindPopup(e.latlng.toString()).openPopup();
-  });
-
-
-
-
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
-
-
+  
 
 
   // --- Authentication & Navbar Logic ---

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
    const closeModalBtn = document.getElementById('close-upload-modal');
    const modalBackdrop = document.getElementById('upload-modal-backdrop');
    const uploadForm = document.getElementById('upload-form');
+   const agentPortrait = document.getElementById('agent-portrait');
    let edittingPropertyId = null;
    let selectedFiles = []; // Array to store files for upload
 
@@ -45,9 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
          const previewContainer = document.getElementById('selected-images-preview');
          if (previewContainer) previewContainer.innerHTML = '';
       }
-   };
-
-   // --- Image Preview & Cumulative Selection Logic ---
+   }
+  
    const fileInput = document.getElementById('property-image');
    const previewContainer = document.getElementById('selected-images-preview');
 
@@ -289,12 +289,67 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                </div>
             `;
+
+          
+            
+
+setTimeout(async ()=>{
+   let lat = 51.505
+   let lng = -0.09
+   const fullAddress = `${prop.city},${prop.state}`
+
+   try{
+      if(fullAddress){
+         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`);
+         const data = await response.json();
+         if(data.length > 0){
+            lat = data[0].lat;
+            lng = data[0].lon;
+         } else{
+            console.warn(`could not find coordinates for ${fullAddress}`)
+            const fallbackAddress = `${prop.city},${prop.state}`.replace(/^, /, '').trim();
+            if(fallbackAddress){
+               const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackAddress)}`);
+               const fallbackData = await fallbackResponse.json();
+               if(fallbackData.length > 0){
+                  lat = fallbackData[0].lat;
+                  lng = fallbackData[0].lon;
+               }
+            }
+            
+         }
+      }
+   }catch(error){
+      console.error('Error fetching coordinates:', error);
+   }
+
+   const map = L.map(`map`).setView([lat, lng], 15);
+
+   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+       maxZoom:19,
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+   }).addTo(map)
+     
+   
+   
+   const marker = L.marker ([lat, lng]).addTo(map);
+   marker.bindPopup(`<b>${prop.street}</b><br>${prop.city}, ${prop.state}`).openPopup();
+
+   const circle = L.circle([lat, lng], {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 500
+   }).addTo(map);
+})
             agentListings.appendChild(card);
          });
       } catch (error) {
          console.error('Error loading listings:', error);
          agentListings.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-500">Failed to load listings.</p></div>';
       }
+
+
    }
 
    async function editForm(id) {

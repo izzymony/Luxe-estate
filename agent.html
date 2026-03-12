@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -209,9 +211,12 @@
                 <!-- Agent Portrait -->
                 <div class="lg:col-span-5 relative fade-in">
                     <div class="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl aspect-[4/5] bg-gray-200">
-                        <img id="agent-portrait"
+                        <div id="agent-portrait">
+                            <img id="agent-portrait"
                             src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2000&auto=format&fit=crop"
                             alt="Agent Portrait" class="w-full h-full object-cover">
+                        </div>
+
                         <div class="absolute inset-x-0 bottom-0 h-1/2 hero-gradient"></div>
                         <div class="absolute bottom-10 left-10 text-white">
                             <span
@@ -317,6 +322,24 @@
 
             <div id="agent-listings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Property cards will be injected here -->
+            </div>
+        </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-6 mb-20 fade-in" style="animation-delay: 0.4s">
+        <div class="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                    <i data-lucide="map" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Explore the Area</h3>
+                    <p class="text-gray-500 text-sm mt-1">Property location and surrounding neighborhood</p>
+                </div>
+            </div>
+            
+            <div class="rounded-2xl overflow-hidden border border-gray-100 shadow-inner h-[400px] relative z-0">
+                <div id="map" class="w-full h-full"></div>
             </div>
         </div>
     </section>
