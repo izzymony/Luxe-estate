@@ -31,6 +31,41 @@ document.addEventListener('DOMContentLoaded', () => {
       loadAgentListings(user.id);
    }
 
+   async function fetchAgentImage(){
+     
+      try{
+      const {data:{user}} = await supabase.auth.getUser();
+      const {data: profile} = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (!profile) return;
+
+
+      
+       agentPortrait.innerHTML= ``;
+         
+            const profImg = document.createElement('div');
+            profImg.innerHTML = `  <div class="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl aspect-[4/5] bg-gray-200">
+                         <img id="agent-portrait"
+                            src='${profile.profile_url}'
+                            alt="Agent Portrait" class="w-full h-full object-cover">
+                        <div class="absolute inset-x-0 bottom-0 h-1/2 hero-gradient"></div>
+                        <div class="absolute bottom-10 left-10 text-white">
+                            <span
+                                class="px-4 py-1.5 bg-brand-600 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">Top
+                                Producer 2025</span>
+                            <h1 id="agent-name-hero" class="text-4xl font-bold">${profile.first_name} ${profile.last_name}</h1>
+                          
+                        </div> `;
+            agentPortrait.appendChild(profImg);
+         
+
+      }catch{
+         console.error('Error fetching profile')
+   }
+      
+   }
+
+   fetchAgentImage()
+
    // Modal Logic
    const toggleModal = (show) => {
       if (show) {
