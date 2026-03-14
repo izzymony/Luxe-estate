@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
             
 
-setTimeout(async ()=>{
+/* setTimeout(async ()=>{
    let lat = 51.505
    let lng = -0.09
    const fullAddress = `${prop.city},${prop.state}`
@@ -342,6 +342,7 @@ setTimeout(async ()=>{
       radius: 500
    }).addTo(map);
 })
+    */
             agentListings.appendChild(card);
          });
       } catch (error) {
@@ -349,7 +350,7 @@ setTimeout(async ()=>{
          agentListings.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-500">Failed to load listings.</p></div>';
       }
 
-
+ 
    }
 
    async function editForm(id) {

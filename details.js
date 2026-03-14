@@ -290,18 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     
     setTimeout(async () => {
-        let lat = 51.505;
-        let lng = -0.09;
-        const fullAddress = `${address},${city}, ${state}`.replace(/^, /, '').trim();
+        let lat = property.latitude || property.lat || 51.505;
+        let lng = property.longitude || property.lng || -0.09;
+        const hasCoordsInDb = (property.latitude || property.lat) && (property.longitude || property.lng);
+        const fullAddress = `${address}, ${city}, ${state}`.replace(/^, /, '').trim();
 
-        try {
-            // Fetch real coordinates from OpenStreetMap's Nominatim
-            if (fullAddress) {
+        if (!hasCoordsInDb && fullAddress) {
+            try {
                 console.log("Searching coordinates for:", fullAddress);
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}`, {
-                    headers: {
-                        'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)'
-                    }
+                    headers: { 'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)' }
                 });
                 const data = await response.json();
                 
@@ -310,51 +308,142 @@ document.addEventListener('DOMContentLoaded', () => {
                     lng = parseFloat(data[0].lon);
                     console.log("Found coordinates:", lat, lng);
                 } else {
-                    console.warn("Full address not found, trying city/state fallback...");
-                    // Fallback to city/state if full address fails
+                    console.warn("Address not found, trying city/state fallback...");
                     const fallbackAddress = `${city}, ${state}`.replace(/^, /, '').trim();
                     if (fallbackAddress) {
                         const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackAddress)}`, {
-                            headers: {
-                                'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)'
-                            }
+                            headers: { 'User-Agent': 'LuxeEstate/1.0 (contact@luxeestate.com)' }
                         });
                         const fallbackData = await fallbackResponse.json();
                         if (fallbackData && fallbackData.length > 0) {
                             lat = parseFloat(fallbackData[0].lat);
                             lng = parseFloat(fallbackData[0].lon);
-                            console.log("Found fallback coordinates:", lat, lng);
                         }
                     }
                 }
+            } catch (error) {
+                console.error("Geocoding failed:", error);
             }
-        } catch (error) {
-            console.error("Geocoding failed:", error);
         }
 
-        // Initialize Map
-        const map = L.map('map').setView([lat, lng], 15);
+        // Initialize Map with a cleaner theme (CartoDB Positron)
+        const map = L.map('map', {
+            zoomControl: false,
+            scrollWheelZoom: false
+        }).setView([lat, lng], 15);
 
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
         }).addTo(map);
 
-        // Add Marker
-        const marker = L.marker([lat, lng]).addTo(map);
-        marker.bindPopup(`<b>${title}</b><br>${fullAddress}`).openPopup();
-        
-        
-        // Add Circle radius (approximate neighborhood)
-        const circle = L.circle([lat, lng], {
-            color: '#0ea5e9', // Brand color
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Add Brand-styled Marker
+        const customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div class="w-10 h-10 bg-brand-600 rounded-full border-4 border-white shadow-xl flex items-center justify-center animate-bounce-slow">
+                    <div class="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+            `,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -20]
+        });
+
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`
+            <div class="p-2">
+                <p class="font-bold text-gray-900">${title}</p>
+                <p class="text-xs text-gray-500 mt-1">${fullAddress}</p>
+            </div>
+        `).openPopup();
+
+        // Add Radius Circle
+        L.circle([lat, lng], {
+            color: '#0ea5e9',
             fillColor: '#0ea5e9',
-            fillOpacity: 0.15,
-            radius: 800
+            fillOpacity: 0.1,
+            radius: 800,
+            weight: 1
         }).addTo(map);
-        circle.bindPopup(`<b>${title}</b><br>${fullAddress}`).openPopup();
-       
-    }, 100);
+
+        // Geolocation Toggle Logic
+        const mapContainer = document.getElementById('map').parentElement;
+        const locateBtn = document.createElement('button');
+        locateBtn.className = 'absolute top-6 right-6 z-[1000] bg-white p-3 rounded-2xl shadow-xl flex items-center gap-2 hover:bg-brand-600 hover:text-white transition-all font-bold text-xs group';
+        locateBtn.innerHTML = `
+            <i data-lucide="crosshair" class="w-4 h-4 text-brand-600 group-hover:text-white"></i>
+            <span>Show My Location</span>
+        `;
+        mapContainer.appendChild(locateBtn);
+
+        // Re-init lucide for the new button
+        if (window.lucide) window.lucide.createIcons();
+
+        let userWatcher = null;
+        let userMarker = null;
+        let userCircle = null;
+
+        locateBtn.onclick = () => {
+            if (userWatcher) {
+                navigator.geolocation.clearWatch(userWatcher);
+                userWatcher = null;
+                if (userMarker) map.removeLayer(userMarker);
+                if (userCircle) map.removeLayer(userCircle);
+                locateBtn.innerHTML = `
+                    <i data-lucide="crosshair" class="w-4 h-4 text-brand-600 group-hover:text-white"></i>
+                    <span>Show My Location</span>
+                `;
+                locateBtn.classList.remove('bg-brand-600', 'text-white');
+                if (window.lucide) window.lucide.createIcons();
+            } else {
+                userWatcher = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const { latitude, longitude, accuracy } = pos.coords;
+                        
+                        if (!userMarker) {
+                            userMarker = L.circleMarker([latitude, longitude], {
+                                radius: 8,
+                                fillColor: '#0ea5e9',
+                                color: '#fff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 1
+                            }).addTo(map);
+                            
+                            userCircle = L.circle([latitude, longitude], {
+                                radius: accuracy,
+                                color: '#0ea5e9',
+                                fillOpacity: 0.1,
+                                weight: 1
+                            }).addTo(map);
+                            
+                            map.flyTo([latitude, longitude], 15);
+                        } else {
+                            userMarker.setLatLng([latitude, longitude]);
+                            userCircle.setLatLng([latitude, longitude]).setRadius(accuracy);
+                        }
+
+                        locateBtn.innerHTML = `
+                            <i data-lucide="x" class="w-4 h-4 text-white"></i>
+                            <span>Stop Tracking</span>
+                        `;
+                        locateBtn.classList.add('bg-brand-600', 'text-white');
+                        if (window.lucide) window.lucide.createIcons();
+                    },
+                    (err) => {
+                        console.error("Geo error:", err);
+                        alert("Could not get your location. Please check your permissions.");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+        };
+
+    }, 200);
 
 
     // Slider Logic Implementation
